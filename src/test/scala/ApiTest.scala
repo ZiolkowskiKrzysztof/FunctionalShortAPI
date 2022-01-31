@@ -27,33 +27,49 @@ class ApiTest extends AnyFlatSpec {
   }
 
   "GET /healthCheck" should "return Ok" in {
+    val response = API.healthCheckService.orNotFound
+      .run(Request(method = Method.GET, uri = uri"/healthCheck"))
+
+    check[Json](response, Status.Ok, None)
+  }
+
+  "POST /api/shorten" should "create a new short" in {
     ???
   }
 
-  "GET /stats" should "return the full list of shorten urls" in {
-    val fullUrl = "google.com"
-    val shortUrl = Option("g.com") // todo: to .option
-    val hits = 1
+  "GET /api/stats" should "return the full list of shorten urls" in {
+    ???
+//    val fullUrl = "google.com"
+//    val shortUrl = Option("g.com") // todo: to .option
+//    val hits = 1
+//
+//    val success: DirectoryRepo[IO] = new DirectoryRepo[IO] {
+//      def find(id: String): IO[Option[Directory]] =
+//        IO.pure(Some(Directory(fullUrl, shortUrl, 1)))
+//    }
+//
+//    val response: IO[Response[IO]] = API
+//      .service[IO](success)
+//      .orNotFound
+//      .run(
+//        Request(method = Method.GET, uri = uri"/stats/google.com")
+//      )
+//
+//    val expectedJson = Json.obj(
+//      "fullURL" := fullUrl,
+//      "shortURL" := shortUrl,
+//      "hits" := hits
+//    )
+//
+//    assert(check[Json](response, Status.Ok, Some(expectedJson)))
+  }
 
-    val success: DirectoryRepo[IO] = new DirectoryRepo[IO] {
-      def find(id: String): IO[Option[Directory]] =
-        IO.pure(Some(Directory(fullUrl, shortUrl, 1)))
-    }
+  "GET /api/stats/<short>" should "response with number of hits" in {
+    ???
+  }
 
-    val response: IO[Response[IO]] = API
-      .service[IO](success)
-      .orNotFound
-      .run(
-        Request(method = Method.GET, uri = uri"/stats/google.com")
-      )
-
-    val expectedJson = Json.obj(
-      "fullURL" := fullUrl,
-      "shortURL" := shortUrl,
-      "hits" := hits
-    )
-
-    assert(check[Json](response, Status.Ok, Some(expectedJson)))
+  "GET /api/<short>" should "redirects to original URI" in {
+    ???
   }
 
 }

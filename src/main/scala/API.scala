@@ -19,10 +19,15 @@ object API {
   implicit val DirectoryEncoder
     : Encoder[Directory] = deriveEncoder[Directory] // todo: move it somewhere else xD
 
-  def service[F[_]](repo: DirectoryRepo[F])(
+  val healthCheckService: HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case GET -> Root / "healthCheck" =>
+      IO(Response(status = Status.Ok))
+  }
+
+  def apiServices[F[_]](repo: DirectoryRepo[F])(
       implicit F: Async[F]
   ): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "stats" / path =>
+    case GET -> Root / "api" / "stats" / path =>
       repo.find(path).map {
         case Some(user) => Response(status = Status.Ok).withEntity(user.asJson)
         case None       => Response(status = Status.NotFound)
