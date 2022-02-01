@@ -3,7 +3,7 @@ version := "0.1"
 scalaVersion := "2.13.8"
 
 val Http4sVersion = "1.0.0-M21"
-val CirceVersion = "0.14.1"
+val CirceVersion = "0.15.0-M1"
 val ScalaTestVersion = "3.2.10"
 
 libraryDependencies ++= Seq(
