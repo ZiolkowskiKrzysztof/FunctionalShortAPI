@@ -48,7 +48,14 @@ class ServiceTest extends AnyFlatSpec {
       Request(method = Method.POST, uri = uri"/api/shorten")
         .withEntity(testBodyJson)
 
-    val response = Service().serviceRoutes.orNotFound.run(request)
+    val init: Ref[IO, Seq[Directory]] =
+      Ref.unsafe(Seq.empty)
+
+    val response =
+      Service
+        .routes(init)
+        .orNotFound
+        .run(request)
 
     assert(check[Json](response, Status.Ok, testDirectory))
   }
