@@ -8,8 +8,6 @@ import org.http4s.circe.jsonDecoder
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import org.http4s.Method.POST
-import org.http4s.client.Client
 
 class ServiceTest extends AnyFlatSpec {
   implicit val runtime: IORuntime = cats.effect.unsafe.IORuntime.global
@@ -22,11 +20,19 @@ class ServiceTest extends AnyFlatSpec {
   implicit val DirectoryDecoder: Decoder[Directory] = deriveDecoder[Directory]
   implicit val DirectoryEncoder: Encoder[Directory] = deriveEncoder[Directory]
 
+  implicit val CountsEncoder: Encoder[Counts] = deriveEncoder[Counts]
+
   val testSimpleDirectory: SimpleDirectory = SimpleDirectory("test")
   val testBodyJson: Json = testSimpleDirectory.asJson
 
   val testDirectory = Some(Directory(testSimpleDirectory.uri,
                                      testSimpleDirectory.generateShort).asJson)
+
+  val directory1: Directory = Directory("fullURL", Option("shortURL"), 1)
+  val directory2: Directory = Directory("fullURL2", Option("shortURL2"), 2)
+  val directory3: Directory = Directory("fullURL3", Option("shortURL3"), 3)
+
+  val directoriesJson: Json = Seq(directory1, directory2).asJson
 
   def check[A](actual: IO[Response[IO]],
                expectedStatus: Status,
@@ -61,14 +67,58 @@ class ServiceTest extends AnyFlatSpec {
   }
 
   "GET /api/stats" should "return the full list of shorten urls" in {
-    ???
+    val request: Request[IO] =
+      Request(method = Method.GET, uri = uri"/api/stats")
+
+    val init: Ref[IO, Seq[Directory]] =
+      Ref.unsafe(Seq(directory1, directory2))
+
+    val response =
+      Service
+        .routes(init)
+        .orNotFound
+        .run(request)
+
+    assert(check[Json](response, Status.Ok, Option(directoriesJson)))
   }
 
   "GET /api/stats/<short>" should "response with number of hits" in {
-    ???
+    val request: Request[IO] =
+      Request(method = Method.GET, uri = uri"/api/stats/fullURL")
+
+    val init: Ref[IO, Seq[Directory]] =
+      Ref.unsafe(Seq(directory1, directory2))
+
+    val expectedResponse = Counts(1).asJson
+
+    val response =
+      Service
+        .routes(init)
+        .orNotFound
+        .run(request)
+
+    assert(check[Json](response, Status.Ok, Option(expectedResponse)))
   }
 
   "GET /api/<short>" should "redirects to original URI" in {
+    val request: Request[IO] =
+      Request(method = Method.GET, uri = uri"/api/shortURL")
+
+    val init: Ref[IO, Seq[Directory]] =
+      Ref.unsafe(Seq(directory1, directory2))
+
+    val expectedResponse = directory1.asJson
+
+    val response =
+      Service
+        .routes(init)
+        .orNotFound
+        .run(request)
+
+    assert(check[Json](response, Status.Ok, Option(expectedResponse)))
+  }
+
+  "Service" should "be able to store value and update it" in {
     ???
   }
 
