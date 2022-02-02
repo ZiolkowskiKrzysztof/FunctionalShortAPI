@@ -1,17 +1,14 @@
 import cats.effect._
+import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax._
 import org.http4s._
-import org.http4s.circe._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
 import org.http4s.dsl.Http4sDsl
 
-import scala.util.Try
-
-object Service extends Http4sDsl[IO] {
+object Service extends Http4sDsl[IO] with LazyLogging {
 
   implicit val simpleDirectoryDecoder: Decoder[SimpleDirectory] =
     deriveDecoder[SimpleDirectory]
@@ -26,31 +23,38 @@ object Service extends Http4sDsl[IO] {
     }
   }
 
-  def routes(ref: Ref[IO, Seq[Directory]]): HttpRoutes[IO] =
+  def routes(ref: Ref[IO, Seq[Directory]]): HttpRoutes[IO] = {
+    val directories: IO[Seq[Directory]] = ref.get
+
     HttpRoutes
       .of[IO] {
         case req @ POST -> Root / "api" / "shorten" =>
           for {
             data <- req.as[SimpleDirectory]
-            _ <- ref.getAndUpdate(_ :+ Directory(data.uri, data.generateShort))
-            response <- Ok(Directory(data.uri, data.generateShort))
+            directory <- IO.delay(Directory(data.uri, data.generateShort))
+            _ <- ref.getAndUpdate(_ :+ directory)
+            response <- Ok(directory)
           } yield response
 
-        case GET -> Root / "api" / URLVar(shortURL) =>
-          ref.get.map(_.filter(_.shortURL.get == shortURL)).map {
-            case Seq(dir) => Response(Status.Ok).withEntity(dir)
-            case _        => Response(Status.BadRequest)
-          }
+        case GET -> Root / "api" / "stats" => Ok(directories)
 
-        case GET -> Root / "api" / "stats" => Ok(ref.get)
+        // to improve
+        case GET -> Root / "api" / URLVar(shortURL) =>
+          for {
+            maybeDir <- directories.map(_.filter(_.shortURL.get == shortURL))
+            _ <- ref.tryUpdate(
+              _.filterNot(_.fullURL == maybeDir.head.fullURL) :+ maybeDir.head.next)
+            response <- Ok(maybeDir.head.next)
+          } yield response
 
         case GET -> Root / "api" / "stats" / URLVar(fullURL) =>
-          ref.get.map(_.filter(_.fullURL == fullURL)).map {
+          directories.map(_.filter(_.fullURL == fullURL)).map {
             case Seq(dir) =>
               val counts = Counts(dir.hits)
               Response(Status.Ok).withEntity(counts)
             case _ => Response(Status.BadRequest)
           }
       }
+  }
 
 }

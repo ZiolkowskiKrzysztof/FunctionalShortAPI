@@ -25,12 +25,12 @@ class ServiceTest extends AnyFlatSpec {
   val testSimpleDirectory: SimpleDirectory = SimpleDirectory("test")
   val testBodyJson: Json = testSimpleDirectory.asJson
 
-  val testDirectory = Some(Directory(testSimpleDirectory.uri,
-                                     testSimpleDirectory.generateShort).asJson)
+  val testDirectory
+    : Option[Json] = Some(Directory(testSimpleDirectory.uri,
+                                    testSimpleDirectory.generateShort).asJson)
 
   val directory1: Directory = Directory("fullURL", Option("shortURL"), 1)
   val directory2: Directory = Directory("fullURL2", Option("shortURL2"), 2)
-  val directory3: Directory = Directory("fullURL3", Option("shortURL3"), 3)
 
   val directoriesJson: Json = Seq(directory1, directory2).asJson
 
@@ -116,10 +116,6 @@ class ServiceTest extends AnyFlatSpec {
         .run(request)
 
     assert(check[Json](response, Status.Ok, Option(expectedResponse)))
-  }
-
-  "Service" should "be able to store value and update it" in {
-    ???
   }
 
 }
