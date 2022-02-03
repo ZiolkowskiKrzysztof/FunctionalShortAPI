@@ -33,7 +33,11 @@ You can use curl or other fancy tool (f.e. Postman) to send requests to applicat
 
 - GET /api/<short>
 
- Redirects to original URI
+ Redirects to original URI and update hits number
+ 
+- GET /api/<full>
+
+ Response with Directory JSON
  
 - GET /api/stats/
 
