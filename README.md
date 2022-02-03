@@ -43,7 +43,7 @@ You can use curl or other fancy tool (f.e. Postman) to send requests to applicat
 
  Response with JSON of all created shorts
 
-- GET /api/stats/<short>
+- GET /api/stats/<full>
 
  Response {"access_count": 123}
 
