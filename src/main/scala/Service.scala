@@ -7,6 +7,7 @@ import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
 import org.http4s.dsl.Http4sDsl
+import org.http4s.implicits.http4sLiteralsSyntax
 
 object Service extends Http4sDsl[IO] with LazyLogging {
 
@@ -41,10 +42,12 @@ object Service extends Http4sDsl[IO] with LazyLogging {
         // to improve
         case GET -> Root / "api" / URLVar(shortURL) =>
           for {
-            maybeDir <- directories.map(_.filter(_.shortURL.get == shortURL))
-            _ <- ref.tryUpdate(
-              _.filterNot(_.fullURL == maybeDir.head.fullURL) :+ maybeDir.head.next)
-            response <- Ok(maybeDir.head.next)
+            maybeDir <- directories
+              .map(_.filter(_.shortURL.get == shortURL))
+              .option
+            dir = maybeDir.get.head.next
+            _ <- ref.tryUpdate(_.filterNot(_.fullURL == dir.fullURL) :+ dir)
+            response <- Ok(dir)
           } yield response
 
         case GET -> Root / "api" / "stats" / URLVar(fullURL) =>
