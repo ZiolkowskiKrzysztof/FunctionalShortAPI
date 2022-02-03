@@ -52,10 +52,6 @@ This is not the final version of the application.
 Things to do:
 1. Improve logic inside endpoint GET /api/<short>
 2. Implement Error Handling
-3. Implement tests and improve generateShort function. 
-    - current test can't handle lack of referential transparency
-4. Implement test application for different scenarios.
-5. Clean DirectoryTest.
 ```
 
 ## Tech stack

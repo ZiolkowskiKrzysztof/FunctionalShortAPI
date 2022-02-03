@@ -109,8 +109,6 @@ class ServiceTest extends AnyFlatSpec {
     val init: Ref[IO, Seq[Directory]] =
       Ref.unsafe(Seq(directory1, directory2))
 
-    val expectedResponse = directory1.asJson
-
     val response =
       Service
         .routes(init)
